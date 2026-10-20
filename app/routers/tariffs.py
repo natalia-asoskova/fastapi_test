@@ -11,4 +11,5 @@ router = APIRouter(prefix="/tariffs", tags=["tariffs"])
 
 @router.get("", response_model=list[TariffOut])
 def list_tariffs(db: Session = Depends(get_db)) -> list[Tariff]:
+    """Все тарифы, отсортированные по цене."""
     return list(db.scalars(select(Tariff).order_by(Tariff.price)))

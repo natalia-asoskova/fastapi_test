@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import Payment, Tariff
-from app.pricing import UnknownPromo, apply_promo, build_schedule
+from app.price import UnknownPromo, apply_promo, build_schedule
 from app.schemas import PaymentCreate, PaymentOut
 from app.statuses import Method, Status
 
@@ -13,6 +13,7 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 
 
 def _find_by_key(db: Session, key: str) -> Payment | None:
+    """Ищет платёж по заголовку Idempotency-Key."""
     return db.scalar(select(Payment).where(Payment.idempotency_key == key))
 
 
@@ -23,6 +24,7 @@ def create_payment(
     idempotency_key: str | None = Header(default=None),
     db: Session = Depends(get_db),
 ) -> Payment:
+    """Создаёт платёж (тариф, промо, рассрочка); идемпотентность по Idempotency-Key."""
     if idempotency_key:
         existing = _find_by_key(db, idempotency_key)
         if existing:
@@ -74,6 +76,7 @@ def list_payments(
     status: Status | None = None,
     db: Session = Depends(get_db),
 ) -> list[Payment]:
+    """Список платежей, опционально по email и/или статусу."""
     query = select(Payment).order_by(Payment.created_at)
     if email:
         query = query.where(Payment.email == email)
@@ -84,6 +87,7 @@ def list_payments(
 
 @router.get("/{payment_id}", response_model=PaymentOut)
 def get_payment(payment_id: str, db: Session = Depends(get_db)) -> Payment:
+    """Возвращает один платёж по id или 404."""
     payment = db.get(Payment, payment_id)
     if payment is None:
         raise HTTPException(status_code=404, detail="payment not found")

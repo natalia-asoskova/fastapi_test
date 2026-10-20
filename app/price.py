@@ -2,7 +2,8 @@ PROMOS: dict[str, int] = {"KVITTO10": 10}
 INSTALLMENT_TERMS = (3, 6, 12)
 
 class UnknownPromo(ValueError):
-    pass
+    """Промокод отсутствует в справочнике PROMOS."""
+
 
 def apply_promo(price: int, code: str | None) -> tuple[int, int]:
     """Возвращает (discount, amount) в копейках.

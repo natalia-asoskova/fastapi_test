@@ -9,10 +9,12 @@ from app.statuses import Status
 
 
 def _new_id() -> str:
+    """UUID платежа в строковом виде."""
     return str(uuid.uuid4())
 
 
 def _now() -> datetime:
+    """Текущее время в UTC для created_at."""
     return datetime.now(UTC)
 
 

@@ -1,4 +1,6 @@
 from enum import StrEnum
+
+
 class Status(StrEnum):
     pending = "pending"
     succeeded = "succeeded"
@@ -18,4 +20,5 @@ ALLOWED_TRANSITIONS: dict[Status, set[Status]] = {
 
 
 def can_transition(current: Status, new: Status) -> bool:
+    """True, если переход current → new разрешён в ALLOWED_TRANSITIONS."""
     return new in ALLOWED_TRANSITIONS.get(current, set())

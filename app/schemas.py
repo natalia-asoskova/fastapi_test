@@ -3,7 +3,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator, model_validator
 
-from app.pricing import INSTALLMENT_TERMS
+from app.price import INSTALLMENT_TERMS
 from app.statuses import Method, Status
 
 
@@ -24,6 +24,7 @@ class PaymentCreate(BaseModel):
 
     @model_validator(mode="after")
     def check_installment(self) -> Self:
+        """Срок рассрочки обязателен и из INSTALLMENT_TERMS только для method=installment."""
         if self.method is Method.installment:
             if self.installment_months not in INSTALLMENT_TERMS:
                 raise ValueError(f"installment_months must be one of {INSTALLMENT_TERMS}")
@@ -49,6 +50,7 @@ class PaymentOut(BaseModel):
     @field_validator("created_at")
     @classmethod
     def _as_utc(cls, value: datetime) -> datetime:
+        """SQLite может вернуть naive datetime — считаем его UTC."""
         return value.replace(tzinfo=UTC) if value.tzinfo is None else value
 
 

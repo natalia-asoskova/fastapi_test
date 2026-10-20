@@ -20,6 +20,7 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 
 def _signature_ok(secret: str, raw_body: bytes, signature: str | None) -> bool:
+    """Проверяет HMAC-SHA256 подпись тела запроса (hex в заголовке X-Signature)."""
     expected = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected.encode(), (signature or "").encode())
 
@@ -27,6 +28,8 @@ def _signature_ok(secret: str, raw_body: bytes, signature: str | None) -> bool:
 def _change_status(
     db: Session, payment_id: str, new: Status
 ) -> Literal["ok", "not_found", "invalid"]:
+    """Меняет статус платежа по правилам графа"""
+    payment = db.get(Payment, payment_id)
     payment = db.get(Payment, payment_id)
     if payment is None:
         return "not_found"
@@ -44,6 +47,7 @@ def _change_status(
 
 @router.post("/bank")
 async def bank_webhook(request: Request, db: Session = Depends(get_db)) -> JSONResponse:
+    """Вебхук банка: подпись (если задан WEBHOOK_SECRET), смена статуса платежа."""
     raw = await request.body()
     secret = os.getenv("WEBHOOK_SECRET")
     if secret and not _signature_ok(secret, raw, request.headers.get("X-Signature")):
